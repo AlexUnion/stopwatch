@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Timer from "./components/timer/timer.component";
+import { fromEvent } from "rxjs";
 
 import './App.css';
 
-import { Observable } from 'rxjs';
 import timeDispatcher from "./store/time";
+import {timeInterval} from "rxjs/operators";
 
 const init = {
     h: 0,
@@ -13,10 +14,10 @@ const init = {
 }
 
 let isPlay = false;
+let clicksAction$ = null;
 
-function handleStartStop(observer) {
+function handleStartStop() {
     if (!isPlay) {
-        timeDispatcher.subscribe(observer);
         timeDispatcher.init();
     } else {
         timeDispatcher.reset()
@@ -32,6 +33,7 @@ function handleReset() {
 
 function App() {
 
+    const waitRef = useRef(null);
     const [currentTime, setTime] = useState(init);
 
     const observer = {
@@ -40,13 +42,28 @@ function App() {
         }
     }
 
+    useEffect(() => {
+        timeDispatcher.subscribe(observer);
+
+        clicksAction$ = fromEvent(waitRef.current, 'click');
+        clicksAction$
+            .pipe(timeInterval())
+            .subscribe((x) => {
+                const { interval } = x;
+                if (interval > 300) {
+                    timeDispatcher.wait();
+                    isPlay = !isPlay;
+                }
+            });
+    }, []);
+
     return (
         <div className="App">
             <Timer time={currentTime}/>
                 <div className="btnContainer">
-                <button type='button' onClick={() => {handleStartStop(observer)}}>Start/Stop</button>
-                <button type='button' onClick={handleWait}>Wait</button>
-                <button type='button' onClick={handleReset}>Reset</button>
+                <button type='button' onClick={handleStartStop}>Start/Stop</button>
+                <button type='button' onClick={() => handleWait()} ref={waitRef}>Wait</button>
+                <button type='button' onClick={() => handleReset()}>Reset</button>
             </div>
         </div>
     );

@@ -1,5 +1,5 @@
 import { Subject } from 'rxjs';
-import { TICK, RESET } from "./actions";
+import { TICK, RESET, WAIT } from "./actions";
 
 const action$ = new Subject();
 
@@ -38,6 +38,9 @@ function stateReducer(state, action) {
             state.s = 0;
             return {...state};
         }
+        case WAIT: {
+            return {...state};
+        }
         default:
             return {...state};
     }
@@ -48,23 +51,43 @@ const timeDispatcher = {
     deleteInterval: null,
     subscribe: (observer) => action$.subscribe(observer),
     init() {
-        if (!this.deleteInterval) {
+        if (!this.isPlay) {
             this.deleteInterval = createInterval(() => {
                 console.log('new value');
                 const newState = stateReducer(state, TICK);
                 action$.next(newState);
+                this.isPlay = true;
             }, 1000);
         }
     },
     reset() {
+        console.log('unsubscribed');
         if (this.deleteInterval) {
-            console.log('unsubscribed');
             this.deleteInterval();
             this.deleteInterval = null;
-            const newState = stateReducer(state, RESET);
-            action$.next(newState);
         }
+        const newState = stateReducer(state, RESET);
+        action$.next(newState);
+        this.isPlay = false;
     },
+    wait() {
+        if (this.isPlay) {
+            console.log('wait');
+            this.deleteInterval();
+            this.deleteInterval = null;
+            const newState = stateReducer(state, WAIT);
+            action$.next(newState);
+        } else {
+            console.log('resume');
+            this.deleteInterval = createInterval(() => {
+                console.log('new value');
+                const newState = stateReducer(state, TICK);
+                action$.next(newState);
+                this.isPlay = true;
+            }, 1000);
+        }
+        this.isPlay = !this.isPlay;
+    }
 }
 
 export default timeDispatcher;
