@@ -34,7 +34,7 @@ function App() {
             .pipe(timeInterval())
             .subscribe((x) => {
                 const { interval } = x;
-                if (interval > 300) {
+                if (interval > 299) {
                     timeDispatcher.wait();
                 }
             });
