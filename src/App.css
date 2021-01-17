@@ -3,5 +3,20 @@
 }
 
 .btnContainer {
-  display: flex;
+  margin-top: 15px;
+}
+
+button {
+  font-size: 22px;
+  padding: 10px 20px;
+  margin: 0 10px;
+  border: 1px solid #222;
+  border-radius: 8px;
+  background-color: #ccc;
+  color: #222;
+  transition: background-color .2s linear;
+}
+
+button:hover {
+  background-color: #999;
 }
